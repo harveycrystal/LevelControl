@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>液位控制系統實驗計算器 - 大大教學</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .symbol-font {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-weight: 600;
+        }
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+    <div class="max-w-5xl mx-auto">
+        <!-- 標題區 -->
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">液位控制系統實驗數據分析器</h1>
+            <div class="h-1 w-20 bg-blue-600 mx-auto rounded-full mb-3"></div>
+            <p class="text-slate-500 font-medium">大大教學 - 程序控制實驗輔助系統</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- 數據輸入區 -->
+            <section class="lg:col-span-5 card p-8">
+                <div class="flex items-center mb-6">
+                    <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">數據輸入 (附件二)</h2>
+                </div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">控制變數最終變化量 (<span class="symbol-font">Δ</span>)</label>
+                        <input type="number" id="delta_upper" step="0.01" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg transition-all" placeholder="輸入 Δ 值">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">操作變數改變量 (<span class="symbol-font">δ</span>)</label>
+                        <input type="number" id="delta_lower" step="0.01" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg transition-all" placeholder="輸入 δ 值">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">達到 63.2% 變化之時間 (<span class="symbol-font">t<sub>63.2%</sub></span>)</label>
+                        <input type="number" id="t632" step="0.01" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg transition-all" placeholder="輸入 t63.2%">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">達到 28.3% 變化之時間 (<span class="symbol-font">t<sub>28.3%</sub></span>)</label>
+                        <input type="number" id="t283" step="0.01" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg transition-all" placeholder="輸入 t28.3%">
+                    </div>
+                    <button onclick="calculate()" class="w-full bg-slate-900 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-bold text-lg shadow-lg">
+                        執行計算
+                    </button>
+                </div>
+            </section>
+
+            <!-- 系統參數顯示區 -->
+            <section class="lg:col-span-7 space-y-6">
+                <div class="card p-8 border-l-8 border-blue-600">
+                    <h2 class="text-xl font-bold text-slate-800 mb-6">系統模型鑑定結果</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">過程增益 (<span class="symbol-font">K</span>)</span>
+                            <span id="res_K" class="text-2xl font-bold text-blue-700">-</span>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">時間常數 (<span class="symbol-font">τ</span>)</span>
+                            <span id="res_tau" class="text-2xl font-bold text-blue-700">-</span>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">時間落後 (<span class="symbol-font">t₀</span>)</span>
+                            <span id="res_t0" class="text-2xl font-bold text-blue-700">-</span>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">比值 (<span class="symbol-font">t₀ / τ</span>)</span>
+                            <span id="res_ratio" class="text-2xl font-bold text-blue-700">-</span>
+                        </div>
+                    </div>
+                    <div id="ratio_warning" class="mt-4 p-3 bg-amber-50 text-amber-700 rounded-lg text-sm font-medium hidden">
+                        ⚠️ 警告：時間落後比值超出 0.1~0.5 之建議範圍，Z-N 法之經驗參數可能偏差較大。
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 參數調整建議表 -->
+        <section class="mt-10 card overflow-hidden">
+            <div class="px-8 py-5 bg-slate-800 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold">控制器參數建議值</h2>
+                <span class="text-xs opacity-70">基於 Ziegler-Nichols 與 IAE 準則</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200">
+                            <th class="px-8 py-4 text-sm font-bold text-slate-600">調校法則</th>
+                            <th class="px-8 py-4 text-sm font-bold text-slate-600">型態</th>
+                            <th class="px-8 py-4 text-sm font-bold text-slate-600">增益 (<span class="symbol-font">K<sub>c</sub></span>)</th>
+                            <th class="px-8 py-4 text-sm font-bold text-slate-600">積分時間 (<span class="symbol-font">τ<sub>i</sub></span>)</th>
+                            <th class="px-8 py-4 text-sm font-bold text-slate-600">微分時間 (<span class="symbol-font">τ<sub>d</sub></span>)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <!-- ZN Rule -->
+                        <tr class="hover:bg-slate-50 transition">
+                            <td rowspan="3" class="px-8 py-4 font-bold text-blue-800 border-r border-slate-100 bg-blue-50/20">四分之一衰退比法<br>(Ziegler-Nichols)</td>
+                            <td class="px-8 py-3 text-slate-600">P</td>
+                            <td id="zn_p_kc" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td class="px-8 py-3 text-slate-300 italic">N/A</td>
+                            <td class="px-8 py-3 text-slate-300 italic">N/A</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-8 py-3 text-slate-600 border-l border-slate-100">PI</td>
+                            <td id="zn_pi_kc" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td id="zn_pi_ti" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td class="px-8 py-3 text-slate-300 italic">N/A</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-8 py-3 text-slate-600 border-l border-slate-100">PID</td>
+                            <td id="zn_pid_kc" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td id="zn_pid_ti" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td id="zn_pid_td" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                        </tr>
+                        <!-- IAE Rule -->
+                        <tr class="hover:bg-slate-50 transition">
+                            <td rowspan="2" class="px-8 py-4 font-bold text-emerald-800 border-r border-slate-100 bg-emerald-50/20">最小積分誤差<br>(IAE - 設定點改變)</td>
+                            <td class="px-8 py-3 text-slate-600 border-l border-slate-100">PI</td>
+                            <td id="iae_pi_kc" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td id="iae_pi_ti" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td class="px-8 py-3 text-slate-300 italic">N/A</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-8 py-3 text-slate-600 border-l border-slate-100">PID</td>
+                            <td id="iae_pid_kc" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td id="iae_pid_ti" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                            <td id="iae_pid_td" class="px-8 py-3 font-mono font-bold text-slate-900">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="mt-12 text-center text-slate-400 text-sm border-t border-slate-200 pt-6">
+            <p>本系統之計算係依據新化高工程序控制講義(何惠陵編)之經驗公式。數據僅供教學與實驗參考。</p>
+            <p class="mt-1">開發者：大大教學</p>
+        </footer>
+    </div>
+
+    <script>
+        function calculate() {
+            // 讀取輸入數據
+            const deltaU = parseFloat(document.getElementById('delta_upper').value);
+            const deltaL = parseFloat(document.getElementById('delta_lower').value);
+            const t632 = parseFloat(document.getElementById('t632').value);
+            const t283 = parseFloat(document.getElementById('t283').value);
+
+            // 數據完整性驗證
+            if (isNaN(deltaU) || isNaN(deltaL) || isNaN(t632) || isNaN(t283)) {
+                return; // 等待使用者填寫完整
+            }
+
+            if (deltaL === 0) {
+                alert("操作變數改變量 (δ) 不能為 0。");
+                return;
+            }
+
+            // 1. 模型參數分析 (反應曲線法)
+            // K = Δ / δ
+            const K = deltaU / deltaL;
+            // τ = 1.5 * (t63.2% - t28.3%)
+            const tau = 1.5 * (t632 - t283);
+            // t0 = t63.2% - τ
+            const t0 = t632 - tau;
+            const ratio = t0 / tau;
+
+            // 顯示模型參數
+            document.getElementById('res_K').innerText = K.toFixed(4);
+            document.getElementById('res_tau').innerText = tau.toFixed(4);
+            document.getElementById('res_t0').innerText = t0.toFixed(4);
+            document.getElementById('res_ratio').innerText = ratio.toFixed(4);
+
+            // 警示處理
+            const warningEl = document.getElementById('ratio_warning');
+            if (ratio < 0.1 || ratio > 0.5) {
+                warningEl.classList.remove('hidden');
+            } else {
+                warningEl.classList.add('hidden');
+            }
+
+            // 2. 四分之一衰退比法 (Ziegler-Nichols Tuning)
+            // P 控制器: Kc = (1/K) * (t0/τ)^-1
+            const zn_p_kc = (1/K) * (tau/t0);
+            document.getElementById('zn_p_kc').innerText = zn_p_kc.toFixed(4);
+
+            // PI 控制器: Kc = (0.9/K) * (t0/τ)^-1, τi = 3.33 * t0
+            const zn_pi_kc = (0.9/K) * (tau/t0);
+            const zn_pi_ti = 3.33 * t0;
+            document.getElementById('zn_pi_kc').innerText = zn_pi_kc.toFixed(4);
+            document.getElementById('zn_pi_ti').innerText = zn_pi_ti.toFixed(4);
+
+            // PID 控制器: Kc = (1.2/K) * (t0/τ)^-1, τi = 2.0 * t0, τd = 0.5 * t0
+            const zn_pid_kc = (1.2/K) * (tau/t0);
+            const zn_pid_ti = 2.0 * t0;
+            const zn_pid_td = 0.5 * t0;
+            document.getElementById('zn_pid_kc').innerText = zn_pid_kc.toFixed(4);
+            document.getElementById('zn_pid_ti').innerText = zn_pid_ti.toFixed(4);
+            document.getElementById('zn_pid_td').innerText = zn_pid_td.toFixed(4);
+
+            // 3. IAE 最小積分誤差準則 (Setpoint Change)
+            // PI 控制器
+            const iae_pi_kc = (0.758/K) * Math.pow(ratio, -0.861);
+            const iae_pi_ti = tau / (1.02 - 0.323 * ratio);
+            document.getElementById('iae_pi_kc').innerText = iae_pi_kc.toFixed(4);
+            document.getElementById('iae_pi_ti').innerText = iae_pi_ti.toFixed(4);
+
+            // PID 控制器
+            const iae_pid_kc = (1.086/K) * Math.pow(ratio, -0.869);
+            const iae_pid_ti = tau / (0.740 - 0.130 * ratio);
+            const iae_pid_td = 0.348 * tau * Math.pow(ratio, 0.914);
+            document.getElementById('iae_pid_kc').innerText = iae_pid_kc.toFixed(4);
+            document.getElementById('iae_pid_ti').innerText = iae_pid_ti.toFixed(4);
+            document.getElementById('iae_pid_td').innerText = iae_pid_td.toFixed(4);
+        }
+    </script>
+</body>
+</html>
